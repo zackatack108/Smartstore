@@ -12,6 +12,8 @@ using Moq;
 using Smartstore.Core.Catalog.Products;
 using Smartstore.Core.Search.Facets;
 using Smartstore.Core.Search;
+using Smartstore.Web.Services;
+using Autofac.Core;
 
 namespace Smartstore.Web.Tests.Common.Controllers;
 
@@ -24,17 +26,16 @@ public class SearchControllerTests
         SearchSettings settings = new SearchSettings();
         settings.InstantSearchTermMinLength = 2;
 
-        SearchController controller = new(null, null, null, null, settings, null, null, null);
+        SearchService service = new(settings, null, null, null);
         CatalogSearchQuery query = new CatalogSearchQuery();
         query.DefaultTerm = "a";
-        var actual = await controller.GetSearchResultModel(query);
+        var actual = await service.GetSearchResultModel(query);
 
         SearchResultModel expected_result = new SearchResultModel(query);
         expected_result.SearchResult = new CatalogSearchResult(query);
         expected_result.TopProducts = ProductSummaryModel.Empty;
         expected_result.Error = "Search.SearchTermMinimumLengthIsNCharacters";
 
-        //need to mock db for this assert
         Assert.AreEqual(expected_result.SearchResult.TotalHitsCount, actual.SearchResult.TotalHitsCount);
         Assert.AreEqual(expected_result.TopProducts, actual.TopProducts);
         Assert.AreEqual(expected_result.Error, actual.Error);
@@ -54,10 +55,9 @@ public class SearchControllerTests
         searchServiceMock.Setup(x => x.SearchAsync(query, false)).ReturnsAsync(catalogSerchResult);
         var searchServiceMockObject = searchServiceMock.Object;
 
-        SearchController controller = new(null, null, null, null, settings, null, null, null);
-        var actual = await controller.GetSearchResultModel(query);
-
-        //need to mock db for this assert
+        SearchService service = new(settings, searchServiceMockObject, null, null);
+        var actual = await service.GetSearchResultModel(query);
+        
         Assert.AreEqual(1, actual.TopProducts.Items.Count);
     }
 }
