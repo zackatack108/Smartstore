@@ -14,6 +14,10 @@ using Smartstore.Core.Search.Facets;
 using Smartstore.Core.Search;
 using Smartstore.Web.Services;
 using Autofac.Core;
+using Smartstore.Core.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Smartstore.Web.Tests.Common.Controllers;
 
@@ -49,7 +53,17 @@ public class SearchControllerTests
         CatalogSearchQuery query = new CatalogSearchQuery();
         query.DefaultTerm = "baseball";
 
-        var catalogSerchResult = new CatalogSearchResult(null, query, null, 1, null, null, null);
+        List<Product> products = new(
+            //new Product()
+            //{
+            //    Id = 1,
+
+            //}
+            );
+
+        var dbProducts = GetQueryableMockDbSet<Product>(products);
+        var catalogSerchResult = new CatalogSearchResult(null, query, dbProducts, 1, null, null, null);
+        
 
         var searchServiceMock = new Mock<ICatalogSearchService>();
         searchServiceMock.Setup(x => x.SearchAsync(query, false)).ReturnsAsync(catalogSerchResult);
@@ -59,5 +73,17 @@ public class SearchControllerTests
         var actual = await service.GetSearchResultModel(query);
         
         Assert.AreEqual(1, actual.TopProducts.Items.Count);
+    }
+
+    public static DbSet<T> GetQueryableMockDbSet<T>(List<T> sourceList) where T : class
+    {
+        var queryable = sourceList.AsQueryable();
+        var dbSet = new Mock<DbSet<T>>();
+        dbSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(queryable.Provider);
+        dbSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(queryable.Expression);
+        dbSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryable.ElementType);
+        dbSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(() => queryable.GetEnumerator());
+        dbSet.Setup(d => d.Add(It.IsAny<T>())).Callback<T>((s) => sourceList.Add(s));
+        return dbSet.Object;
     }
 }
