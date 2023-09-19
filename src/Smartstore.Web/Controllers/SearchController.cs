@@ -7,6 +7,7 @@ using Smartstore.Core.Localization.Routing;
 using Smartstore.Core.Seo;
 using Smartstore.Web.Models.Catalog;
 using Smartstore.Web.Models.Search;
+using Smartstore.Web.Services;
 
 namespace Smartstore.Web.Controllers
 {
@@ -20,7 +21,6 @@ namespace Smartstore.Web.Controllers
         private readonly CatalogSettings _catalogSettings;
         private readonly Lazy<IProductService> _productService;
         private readonly ProductUrlHelper _productUrlHelper;
-        //private SearchResultModel _searchResultModel;
 
         public SearchController(
             CatalogHelper catalogHelper,
@@ -31,7 +31,6 @@ namespace Smartstore.Web.Controllers
             CatalogSettings catalogSettings,
             Lazy<IProductService> productService,
             ProductUrlHelper productUrlHelper
-            //SearchResultModel search
             )
         {
             _catalogHelper = catalogHelper;
@@ -42,15 +41,6 @@ namespace Smartstore.Web.Controllers
             _catalogSettings = catalogSettings;
             _productService = productService;
             _productUrlHelper = productUrlHelper;
-
-            //if(search == null)
-            //{
-            //}
-            //else
-            //{
-            //    _searchResultModel = search;
-            //}
-            //_searchResultModel = new SearchResultModel();
         }
 
         [HttpPost]
@@ -111,6 +101,7 @@ namespace Smartstore.Web.Controllers
         public async Task<IActionResult> Search(CatalogSearchQuery query)
         {
             var term = query?.DefaultTerm;
+            var searchService = new SearchService(_searchSettings, _catalogSearchService, _catalogHelper, _catalogSettings);
 
             if (_searchSettings.SearchProductByIdentificationNumber)
             {
