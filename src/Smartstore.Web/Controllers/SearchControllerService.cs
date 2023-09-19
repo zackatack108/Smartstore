@@ -35,7 +35,7 @@ namespace Smartstore.Web.Controllers
                 return model;
             }
 
-            CustomerCheck();
+            //CustomerCheck();
 
             try
             {

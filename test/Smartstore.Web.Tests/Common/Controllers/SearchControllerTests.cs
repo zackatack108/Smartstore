@@ -18,6 +18,8 @@ using Smartstore.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Smartstore.Web.Tests.Common.Controllers;
 
@@ -50,27 +52,46 @@ public class SearchControllerTests
     {
         SearchSettings settings = new SearchSettings();
         settings.InstantSearchTermMinLength = 2;
-        CatalogSearchQuery query = new CatalogSearchQuery();
-        query.DefaultTerm = "baseball";
+        CatalogSearchQuery query = new CatalogSearchQuery("searchterm", "shoes");
 
-        List<Product> products = new(
-            //new Product()
-            //{
-            //    Id = 1,
-
-            //}
-            );
+        List<Product> products = new List<Product>{
+            new Product
+            {
+                ProductType = ProductType.SimpleProduct,
+                Name = "SUPERSTAR SHOE",
+                MetaTitle = "SUPERSTAR SHOE",
+                ShortDescription = "THE STREETWEAR CLASSIC WITH THE SHELL TOE.",
+                FullDescription = "<p>The Adidas Superstar was first released in 1969 and soon lived up to its name. Today he is considered a street style legend. In this version, the shoe comes with a comfortable full grain leather upper. The look is perfected by the classic rubber shell toe for added durability.</p>",
+                Sku = "Adidas-C77124",
+                ProductTemplateId = 1,
+                AllowCustomerReviews = true,
+                Published = true,
+                Price = 99.95M,
+                ManageInventoryMethod = ManageInventoryMethod.ManageStock,
+                OrderMinimumQuantity = 1,
+                OrderMaximumQuantity = 10000,
+                StockQuantity = 10000,
+                NotifyAdminForQuantityBelow = 1,
+                IsShippingEnabled = true,
+                DeliveryTime = null,
+                DisplayOrder = 5,
+                TaxCategoryId = 1
+            }
+        };
 
         var dbProducts = GetQueryableMockDbSet<Product>(products);
-        var catalogSerchResult = new CatalogSearchResult(null, query, dbProducts, 1, null, null, null);
+        var catalogSearchResult = new CatalogSearchResult(null, query, dbProducts, 1, null, null, null);
         
 
         var searchServiceMock = new Mock<ICatalogSearchService>();
-        searchServiceMock.Setup(x => x.SearchAsync(query, false)).ReturnsAsync(catalogSerchResult);
+        searchServiceMock.Setup(x => x.SearchAsync(query, true)).ReturnsAsync(catalogSearchResult);
         var searchServiceMockObject = searchServiceMock.Object;
 
-        SearchService service = new(settings, searchServiceMockObject, null, null);
-        var actual = await service.GetSearchResultModel(query);
+        CatalogSearchResult actualCatalogSearchResult = null;
+        SearchResultModel actualModel = new(query);
+
+        SearchControllerService service = new(searchServiceMockObject, settings, null, null);
+        var actual = await service.GetSearchResultService(actualModel, actualCatalogSearchResult, query);
         
         Assert.AreEqual(1, actual.TopProducts.Items.Count);
     }
