@@ -17,6 +17,8 @@ namespace Smartstore.Web.Models.Catalog
             SourceResult = sourceResult;
         }
 
+        public ProductSummaryModel() { PagedList = null; SourceResult = null; }
+
         public CatalogSearchResult SourceResult { get; init; }
         public int? ThumbSize { get; set; }
         public bool ShowSku { get; set; }

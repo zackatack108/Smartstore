@@ -7,7 +7,7 @@ namespace Smartstore.Web.Controllers
 {
     public class SearchControllerService: PublicController
     {
-        private readonly CatalogHelper _catalogHelper;
+        private readonly ICatalogHelper _catalogHelper;
         private readonly SearchSettings _searchSettings;
         private readonly ICatalogSearchService _catalogSearchService;
         private readonly CatalogSettings _catalogSettings;
@@ -16,7 +16,7 @@ namespace Smartstore.Web.Controllers
         public SearchControllerService(ICatalogSearchService catalogSearchService,
             SearchSettings searchSettings,
             CatalogSettings catalogSettings,
-            CatalogHelper catalogHelper)
+            ICatalogHelper catalogHelper)
         {
             _catalogSearchService = catalogSearchService;
             _searchSettings = searchSettings;
@@ -80,7 +80,7 @@ namespace Smartstore.Web.Controllers
             var summaryModel = await _catalogHelper.MapProductSummaryModelAsync(result, mappingSettings);
 
             // Prepare paging/sorting/mode stuff.
-            _catalogHelper.MapListActions(summaryModel, null, _catalogSettings.DefaultPageSizeOptions);
+            //_catalogHelper.MapListActions(summaryModel, null, _catalogSettings.DefaultPageSizeOptions);
 
             // Add product hits.
             model.TopProducts = summaryModel;

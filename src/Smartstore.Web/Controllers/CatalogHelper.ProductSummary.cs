@@ -18,7 +18,7 @@ using Smartstore.Web.Models.Media;
 
 namespace Smartstore.Web.Controllers
 {
-    public partial class CatalogHelper
+    public partial class CatalogHelper : ICatalogHelper
     {
         public void MapListActions(ProductSummaryModel model, IPagingOptions entity, string defaultPageSizeOptions)
         {
@@ -207,10 +207,10 @@ namespace Smartstore.Web.Controllers
                 prefetchTranslations = prefetchTranslations && _isMultiLanguageEnvironment;
                 var prefetchSlugs = settings.PrefetchUrlSlugs == true || (settings.PrefetchUrlSlugs == null && _performanceSettings.AlwaysPrefetchUrlSlugs);
                 var allProductIds = prefetchSlugs || prefetchTranslations ? products.Select(x => x.Id).ToArray() : Array.Empty<int>();
-                
+
                 string taxInfo = T(calculationOptions.TaxInclusive ? "Tax.InclVAT" : "Tax.ExclVAT");
                 var legalInfo = string.Empty;
-                
+
                 var res = new Dictionary<string, LocalizedString>(StringComparer.OrdinalIgnoreCase)
                 {
                     { "Products.CallForPrice", T("Products.CallForPrice") },
@@ -220,7 +220,7 @@ namespace Smartstore.Web.Controllers
                     { "Products.DimensionsValue", T("Products.DimensionsValue") },
                     { "Common.AdditionalShippingSurcharge", T("Common.AdditionalShippingSurcharge") }
                 };
-                
+
                 if (settings.MapLegalInfo)
                 {
                     var shippingInfoUrl = await _urlHelper.TopicAsync("ShippingInfo");
@@ -249,7 +249,7 @@ namespace Smartstore.Web.Controllers
                     {
                         await batchContext.AppliedDiscounts.LoadAllAsync();
                     }
-                    
+
                     await batchContext.TierPrices.LoadAllAsync();
                 }
 
@@ -516,7 +516,7 @@ namespace Smartstore.Web.Controllers
 
             // Delivery Times.
             item.HideDeliveryTime = model.DeliveryTimesPresentation == DeliveryTimesPresentation.None
-                || product.ProductType == ProductType.GroupedProduct 
+                || product.ProductType == ProductType.GroupedProduct
                 || !product.IsShippingEnabled;
 
             if (!item.HideDeliveryTime)
@@ -575,7 +575,7 @@ namespace Smartstore.Web.Controllers
             item.RatingSum = product.ApprovedRatingSum;
             item.TotalReviews = product.ApprovedTotalReviews;
             item.IsShippingEnabled = contextProduct.IsShippingEnabled;
-            
+
             if (model.ShowWeight && contextProduct.Weight > 0)
             {
                 var measureWeightName = (await GetMeasureWeightAsync(_measureSettings.BaseWeightId))?.GetLocalized(x => x.Name) ?? string.Empty;
