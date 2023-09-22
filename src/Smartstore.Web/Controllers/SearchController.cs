@@ -101,7 +101,8 @@ namespace Smartstore.Web.Controllers
         public async Task<IActionResult> Search(CatalogSearchQuery query)
         {
             var term = query?.DefaultTerm;
-            var searchService = new SearchService(_searchSettings, _catalogSearchService, _catalogHelper, _catalogSettings);
+
+            CustomerCheck();
 
             if (_searchSettings.SearchProductByIdentificationNumber)
             {
@@ -116,24 +117,24 @@ namespace Smartstore.Web.Controllers
                                 attributeCombination.AttributeSelection));
                         }
 
-                        return RedirectToRoute("Product", new { SeName = await product.GetActiveSlugAsync() });
-
-                    
+                        return RedirectToRoute("Product", new { SeName = await product.GetActiveSlugAsync() });                    
                 }
             }
-            return View(await GetSearchResultModel(query));
-        }
 
-        public async Task<SearchResultModel> GetSearchResultModel(CatalogSearchQuery query)
-        {
             CatalogSearchResult result = null;
             var model = new SearchResultModel(query);
-
-
-            //break into it's own method search settings
-            
             var service = new SearchControllerService(_catalogSearchService, _searchSettings, _catalogSettings, _catalogHelper);
-            return await service.GetSearchResultService(model, result, query);
+
+            return View(await service.GetSearchResultService(model, result, query));
+        }
+
+        public void CustomerCheck()
+        {
+            var customer = Services.WorkContext.CurrentCustomer;
+            if (!customer.IsSystemAccount)
+            {
+                customer.GenericAttributes.LastContinueShoppingPage = HttpContext.Request.RawUrl();
+            }
         }
     }
 }

@@ -35,8 +35,6 @@ namespace Smartstore.Web.Controllers
                 return model;
             }
 
-            //CustomerCheck();
-
             try
             {
                 result = await _catalogSearchService.SearchAsync(query);
@@ -80,20 +78,13 @@ namespace Smartstore.Web.Controllers
             var summaryModel = await _catalogHelper.MapProductSummaryModelAsync(result, mappingSettings);
 
             // Prepare paging/sorting/mode stuff.
-            //_catalogHelper.MapListActions(summaryModel, null, _catalogSettings.DefaultPageSizeOptions);
+            _catalogHelper.MapListActions(summaryModel, null, _catalogSettings.DefaultPageSizeOptions);
 
             // Add product hits.
             model.TopProducts = summaryModel;
             return model;
         }
 
-        public void CustomerCheck()
-        {
-            var customer = Services.WorkContext.CurrentCustomer;
-            if (!customer.IsSystemAccount)
-            {
-                customer.GenericAttributes.LastContinueShoppingPage = HttpContext.Request.RawUrl();
-            }
-        }
+        
     }
 }

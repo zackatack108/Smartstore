@@ -23,6 +23,7 @@ using static System.Formats.Asn1.AsnWriter;
 using Smartstore.Core;
 using System.Threading;
 using System.Collections;
+using Smartstore.Core.Catalog;
 
 namespace Smartstore.Web.Tests.Common.Controllers;
 
@@ -53,9 +54,13 @@ public class SearchControllerTests
     [Test]
     public async Task Search_Item()
     {
-        SearchSettings settings = new SearchSettings();
-        settings.InstantSearchTermMinLength = 2;
-        CatalogSearchQuery query = new CatalogSearchQuery("searchterm", "shoes");
+        SearchSettings settings                         = new SearchSettings();
+        ProductSummaryModel productSummaryModel         = new ProductSummaryModel();
+        CatalogSearchQuery query                        = new CatalogSearchQuery("searchterm", "shoes");
+        CatalogSearchResult actualCatalogSearchResult   = null;
+        CatalogSettings catalogSettings                 = new();
+        SearchResultModel actualModel                   = new(query);
+
 
         var product = new Product
         {
@@ -80,34 +85,28 @@ public class SearchControllerTests
             TaxCategoryId = 1
         };
 
-        List<Product> products = new List<Product>{ product };
-
-        var dbProducts = GetQueryableMockDbSet<Product>(products);
-        var catalogSearchResult = new CatalogSearchResult(null, query, dbProducts, 1, null, null, null);
-        
-
-        var searchServiceMock = new Mock<ICatalogSearchService>();
-
-        searchServiceMock.Setup(x => x.SearchAsync(query,false)).ReturnsAsync(catalogSearchResult);
-        var searchServiceMockObject = searchServiceMock.Object;
-
-        var mapSetting = new ProductSummaryMappingSettings();
-        var productSummaryModel = new ProductSummaryModel();
         productSummaryModel.Items = new List<ProductSummaryItemModel> {
             new ProductSummaryItemModel(productSummaryModel) {
                 SeName = "SUPERSTAR SHOE"
             }
         };
 
+        List<Product> products = new List<Product>{ product };
+        settings.InstantSearchTermMinLength = 2;
+
+        var dbProducts = GetQueryableMockDbSet<Product>(products);
+        var catalogSearchResult = new CatalogSearchResult(null, query, dbProducts, 1, null, null, null);        
+
+        var searchServiceMock = new Mock<ICatalogSearchService>();
         var catalogHelperMock = new Mock<ICatalogHelper>();
+
+        searchServiceMock.Setup(x => x.SearchAsync(query,false)).ReturnsAsync(catalogSearchResult);
         catalogHelperMock.Setup(x => x.MapProductSummaryModelAsync(catalogSearchResult, null)).ReturnsAsync(productSummaryModel);
-        var catalogHelperMockObject = catalogHelperMock.Object;
+        
+        var searchServiceMockObject = searchServiceMock.Object;
+        var catalogHelperMockObject = catalogHelperMock.Object;        
 
-
-        CatalogSearchResult actualCatalogSearchResult = null;
-        SearchResultModel actualModel = new(query);
-
-        SearchControllerService service = new(searchServiceMockObject, settings, null, catalogHelperMockObject);
+        SearchControllerService service = new(searchServiceMockObject, settings, catalogSettings, catalogHelperMockObject);
         var actual = await service.GetSearchResultService(actualModel, actualCatalogSearchResult, query);
         
         Assert.AreEqual(1, actual.TopProducts.Items.Count);
